@@ -2,4 +2,16 @@
 <resources>
     <string name="app_name">workshop-android-play-services</string>
     <string name="progress_message">Signing in...</string>
+
+    <string name="gcm_registered">From GCM: device successfully registered!</string>
+    <string name="gcm_unregistered">From GCM: device successfully unregistered!</string>
+    <string name="gcm_message">From GCM: you got message!</string>
+    <string name="gcm_deleted">From GCM: server deleted %1$d pending messages!</string>
+    <string name="server_registering">Trying (attempt %1$d/%2$d) to register device on Demo Server.</string>
+    <string name="server_register_error">Error while registering to server</string>
+    <string name="server_registered">From Demo Server: successfully added device!</string>
+    <string name="server_unregistered">From Demo Server: successfully removed device!</string>
+    <string name="already_registered">Already registered, using registration id from preferences!</string>
+    <string name="notification_title">Google Cloud Messaging</string>
+    <string name="avatar">avatar</string>
 </resources>

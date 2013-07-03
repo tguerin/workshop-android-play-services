@@ -1,5 +1,6 @@
 package fr.xebia.workshop.android.core.gms.location;
 
+import android.app.PendingIntent;
 import android.content.IntentSender;
 import android.location.Location;
 import android.os.Bundle;
@@ -10,13 +11,16 @@ import android.support.v4.app.FragmentTransaction;
 import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
+import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.LocationClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import fr.xebia.workshop.android.core.utils.Time;
 
+import java.util.Arrays;
+
 public class LocationFragment extends Fragment implements GooglePlayServicesClient.ConnectionCallbacks,
-        GooglePlayServicesClient.OnConnectionFailedListener, LocationListener {
+        GooglePlayServicesClient.OnConnectionFailedListener, LocationListener, LocationClient.OnAddGeofencesResultListener {
 
     // Update frequency in seconds
     public static final int UPDATE_INTERVAL_IN_SECONDS = 20;
@@ -34,6 +38,7 @@ public class LocationFragment extends Fragment implements GooglePlayServicesClie
 
     private LocationClient locationClient;
     private LocationRequest currentlocationRequest;
+    private PendingIntent pendingIntentForGeofence;
 
 
     @Override
@@ -61,6 +66,10 @@ public class LocationFragment extends Fragment implements GooglePlayServicesClie
     @Override
     public void onConnected(Bundle bundle) {
         locationClient.requestLocationUpdates(currentlocationRequest, this);
+        if(pendingIntentForGeofence != null){
+            registerGeofence(pendingIntentForGeofence);
+            pendingIntentForGeofence = null;
+        }
     }
 
     @Override
@@ -121,5 +130,27 @@ public class LocationFragment extends Fragment implements GooglePlayServicesClie
         fragmentTransaction.add(locationFragment, TAG_LOCATION);
         fragmentTransaction.commit();
         return locationFragment;
+    }
+
+    public void requestGeofence(PendingIntent pendingIntent) {
+        if(locationClient == null || !locationClient.isConnected()) {
+            pendingIntentForGeofence = pendingIntent;
+        } else {
+            registerGeofence(pendingIntent);
+        }
+    }
+
+    private void registerGeofence(PendingIntent pendingIntent) {
+        Geofence geofence = new Geofence.Builder()
+                .setRequestId("test")
+                .setCircularRegion(48.879593, 2.415551, 100)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .build();
+        locationClient.addGeofences(Arrays.asList(geofence), pendingIntent, this);
+    }
+
+    @Override
+    public void onAddGeofencesResult(int i, String[] strings) {
     }
 }

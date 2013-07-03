@@ -343,7 +343,7 @@ public final class PlusClientFragment extends Fragment
         }
     }
 
-    private void showProgressDialog() {
+    private void  showProgressDialog() {
         DialogFragment progressDialog =
                 (DialogFragment) getFragmentManager().findFragmentByTag(TAG_PROGRESS_DIALOG);
         if (progressDialog == null) {

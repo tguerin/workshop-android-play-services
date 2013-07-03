@@ -1,18 +1,10 @@
 package fr.xebia.workshop.android.ui;
 
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.util.Log;
-import android.widget.Toast;
-import com.google.android.gms.location.ActivityRecognitionResult;
-import com.google.android.gms.location.DetectedActivity;
-import com.google.android.gms.location.LocationClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.plus.PlusClient;
 import com.google.android.gms.plus.model.people.Person;
@@ -30,8 +22,6 @@ public class MapActivity extends FragmentActivity implements PlusClientFragment.
     private PlusClientFragment plusClientFragment;
     private ActivityRecognitionFragment activityRecognitionFragment;
 
-    private ActivityRecognitionReceiver activityRecognitionReceiver;
-
 
     private static final int SIGN_IN = 1;
     private Person currentPerson;
@@ -46,20 +36,22 @@ public class MapActivity extends FragmentActivity implements PlusClientFragment.
         plusClientFragment = PlusClientFragment.getPlusClientFragment(this, null);
         locationFragment = LocationFragment.getLocationFragment(this);
         activityRecognitionFragment = ActivityRecognitionFragment.getActivityRecognitionFragment(this);
-        activityRecognitionReceiver = new ActivityRecognitionReceiver();
 
 
         if (savedInstanceState == null) {
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, new Intent(ActivityRecognitionReceiver.ACTION),
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, new Intent(MapFragment.ActivityRecognitionReceiver.ACTION),
                     FLAG_UPDATE_CURRENT);
             activityRecognitionFragment.requestActivityUpdates(pendingIntent);
+
+            pendingIntent = PendingIntent.getBroadcast(this, 0, new Intent(MapFragment.ActivityRecognitionReceiver.ACTION),
+                    FLAG_UPDATE_CURRENT);
+            locationFragment.requestGeofence(pendingIntent);
         }
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        registerReceiver(activityRecognitionReceiver, new IntentFilter(ActivityRecognitionReceiver.ACTION));
         if (currentPerson == null) {
             plusClientFragment.signIn(SIGN_IN);
         }
@@ -67,7 +59,6 @@ public class MapActivity extends FragmentActivity implements PlusClientFragment.
 
     @Override
     protected void onStop() {
-        unregisterReceiver(activityRecognitionReceiver);
         super.onStop();
     }
 
@@ -82,51 +73,5 @@ public class MapActivity extends FragmentActivity implements PlusClientFragment.
         mapFragment.updateClientLocation(location);
     }
 
-    public static final class ActivityRecognitionReceiver extends BroadcastReceiver {
 
-        public static final String ACTION = "fr.xebia.workshop.map.activity.recognition";
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (ActivityRecognitionResult.hasResult(intent)) {
-                // Get the update
-                ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
-                // Get the most probable activity
-                DetectedActivity mostProbableActivity = result.getMostProbableActivity();
-                /*
-                 * Get the probability that this activity is the
-                 * the user's actual activity
-                 */
-                int confidence = mostProbableActivity.getConfidence();
-
-                /*
-                 * Get an integer describing the type of activity
-                 */
-                int activityType = mostProbableActivity.getType();
-                String activityName = getNameFromType(activityType);
-
-                Toast.makeText(context, "Activity : " + activityName + " confidence : " + confidence, Toast.LENGTH_LONG).show();
-            } else if (LocationClient.hasError(intent)){
-                Log.e("Location service error ", Integer.toString(LocationClient.getErrorCode(intent)));
-            }
-        }
-
-        private String getNameFromType(int activityType) {
-            switch (activityType) {
-                case DetectedActivity.IN_VEHICLE:
-                    return "in_vehicle";
-                case DetectedActivity.ON_BICYCLE:
-                    return "on_bicycle";
-                case DetectedActivity.ON_FOOT:
-                    return "on_foot";
-                case DetectedActivity.STILL:
-                    return "still";
-                case DetectedActivity.UNKNOWN:
-                    return "unknown";
-                case DetectedActivity.TILTING:
-                    return "tilting";
-            }
-            return "unknown";
-        }
-    }
 }
